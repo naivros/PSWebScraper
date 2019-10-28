@@ -1,0 +1,192 @@
+<!-- views/pages/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>    
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.js"></script>
+    </head>
+
+    <body>
+        <nav>
+            <div class="nav-wrapper">
+                <a href="#" class="brand-logo" style="margin-left:10px;">PowerSchool Analytics</a>
+                <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li><a href="#">View Source</a></li>
+                </ul>
+            </div>
+        </nav>   
+        <div class="container">
+
+                        
+    
+        <h1>Grades</h1>
+        <div id="myPlotly" style="width:1200x;height:800px;"></div>
+        <br>
+        
+        <canvas id="myChart" width="400" height="400"></canvas>
+    </div>
+    
+</main>
+<script
+  src="https://code.jquery.com/jquery-3.3.1.js"
+  integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+  crossorigin="anonymous"></script>
+
+    <script>
+    b1 = "#3efc97"
+    b2 = "#0110dc"
+    b3 = "#e75f89"
+    b4 = "#b86ef5"
+    var data = JSON.parse('<%- classes %>')
+    function createBubbleChart(data, Block1,Block2,Block3,Block4){
+    newData = []
+    for(o=0;o<data.length;o++){
+        
+        for(i=0;i<data[o].length;i++){   
+            
+            if(data[o][i]["Category"] == "Growth Level"){
+                level = "Growth Level"
+                r=10
+            }
+            if(data[o][i]["Category"] == "Practice Level"){
+                level = "Practice Level"
+                r=5
+            }
+            if(data[o][i]["Category"] == "Mastery Level"){
+                level = "Mastery Level"
+                r=25
+            }
+
+            if(o==0){
+                backgroundColor = b1
+                
+            }
+            if(o==1){
+                backgroundColor = b2
+                
+            }
+            if(o==2){
+                backgroundColor = b3
+                
+            }
+            if(o==3){
+                backgroundColor = b4
+                
+            }
+            label = data[o][i]["Assignment"]
+            var day = moment(data[o][i]["Due Date"]);
+            console.log(day)
+            tmp = {
+                    label: [label],
+                    backgroundColor: backgroundColor,
+                    data: [{
+                        x: day,
+                        y: data[o][i]["%"],
+                        r: r
+                    }]
+            }
+            
+        if(Block1 && o==0){
+            newData.push(tmp)
+        }
+        if(Block2 && o==1){
+            newData.push(tmp)
+        }
+        if(Block3 && o==2){
+            newData.push(tmp)
+        }
+        if(Block4 && o==3){
+            newData.push(tmp)
+        }
+        }
+    
+    }
+    new Chart(document.getElementById("myChart"), {
+    type: 'bubble',
+    data: {
+      datasets: newData
+    },
+    options: {
+    scales: {
+      xAxes: [{
+        type: 'time',
+        time: {
+          displayFormats: {
+          	'millisecond': 'MMM DD',
+            'second': 'MMM DD',
+            'minute': 'MMM DD',
+            'hour': 'MMM DD',
+            'day': 'MMM DD',
+            'week': 'MMM DD',
+            'month': 'MMM DD',
+            'quarter': 'MMM DD',
+            'year': 'MMM DD',
+          }
+        }
+      }],
+    },
+  }
+});
+    }
+    createBubbleChart(data, true, true, true, true);
+    function createPlotlyChart(data, Block1, Block2, Block3, Block4){
+    plotlyData = []
+    for(i=0;i<data.length;i++){
+        master = {type: 'scatter', name: "Class" + (i+1) + ": Mastery"};
+        growth = {type: 'scatter', name: "Class" + (i+1) + ": Growth"};
+        practice = {type: 'scatter', name: "Class" + (i+1) + ": Practice"};
+        masterX = [];
+        masterY = [];
+        growthX = [];
+        growthY = [];
+        practiceX = [];
+        practiceY = [];
+        for(j=0;j<data[i].length;j++){
+                x = new Date(data[i][j]["Due Date"])
+                y = data[i][j]["%"]
+                if(data[i][j]["Category"] == "Practice Level"){
+                   practiceX.push(x)
+                   practiceY.push(y) 
+                }
+                if(data[i][j]["Category"] == "Growth Level"){
+                   growthX.push(x)
+                   growthY.push(y)
+                }
+                if(data[i][j]["Category"] == "Mastery Level"){
+                   masterX.push(x)
+                   masterY.push(y)
+                }
+            }
+            master.x = masterX
+            master.y = masterY
+            practice.x = practiceX
+            practice.y = practiceY
+            growth.x = growthX
+            growth.y = growthY
+            if(i==0 && Block1){
+                plotlyData.push(master,practice,growth)
+            }
+            if(i==1 && Block2){
+                plotlyData.push(master,practice,growth)
+            }
+            if(i==2 && Block3){
+                plotlyData.push(master,practice,growth)
+            }
+            if(i==3 && Block4){
+                plotlyData.push(master,practice,growth)    
+            }
+            
+        }
+    return plotlyData
+    }
+
+    Plotly.newPlot('myPlotly', createPlotlyChart(data,true,true,true,true));
+    
+    </script>
+    
+</body>
+</html>
